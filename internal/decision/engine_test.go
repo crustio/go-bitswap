@@ -15,7 +15,6 @@ import (
 	pb "github.com/ipfs/go-bitswap/message/pb"
 
 	blocks "github.com/ipfs/go-block-format"
-	cid "github.com/ipfs/go-cid"
 	ds "github.com/ipfs/go-datastore"
 	dssync "github.com/ipfs/go-datastore/sync"
 	blockstore "github.com/ipfs/go-ipfs-blockstore"
@@ -123,7 +122,7 @@ func TestConsistentAccounting(t *testing.T) {
 
 		sender.Engine.MessageSent(receiver.Peer, m)
 		receiver.Engine.MessageReceived(ctx, sender.Peer, m)
-		receiver.Engine.ReceiveFrom(sender.Peer, m.Blocks(), nil)
+		receiver.Engine.ReceiveFrom(sender.Peer, m.Blocks())
 	}
 
 	// Ensure sender records the change
@@ -899,7 +898,7 @@ func TestSendReceivedBlocksToPeersThatWantThem(t *testing.T) {
 	if err := bs.PutMany([]blocks.Block{blks[0], blks[2]}); err != nil {
 		t.Fatal(err)
 	}
-	e.ReceiveFrom(otherPeer, []blocks.Block{blks[0], blks[2]}, []cid.Cid{})
+	e.ReceiveFrom(otherPeer, []blocks.Block{blks[0], blks[2]})
 	_, env = getNextEnvelope(e, next, 5*time.Millisecond)
 	if env == nil {
 		t.Fatal("expected envelope")
@@ -962,7 +961,7 @@ func TestSendDontHave(t *testing.T) {
 	if err := bs.PutMany(blks); err != nil {
 		t.Fatal(err)
 	}
-	e.ReceiveFrom(otherPeer, blks, []cid.Cid{})
+	e.ReceiveFrom(otherPeer, blks)
 
 	// Envelope should contain 2 HAVEs / 2 blocks
 	_, env = getNextEnvelope(e, next, 10*time.Millisecond)
