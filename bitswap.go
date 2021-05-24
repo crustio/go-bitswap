@@ -368,7 +368,7 @@ func (bs *Bitswap) receiveBlocksFrom(ctx context.Context, from peer.ID, blks []b
 	}
 
 	// Put wanted blocks into blockstore
-	if _, err := crust.GetRootFromSealContext(ctx); err != nil {
+	if crust.SWorker.GetUrl() == "" {
 		if len(wanted) > 0 {
 			err := bs.blockstore.PutMany(wanted)
 			if err != nil {
