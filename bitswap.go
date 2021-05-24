@@ -10,8 +10,7 @@ import (
 	"sync"
 	"time"
 
-	delay "github.com/ipfs/go-ipfs-delay"
-
+	crust "github.com/crustio/go-ipfs-encryptor/crust"
 	deciface "github.com/ipfs/go-bitswap/decision"
 	bsbpm "github.com/ipfs/go-bitswap/internal/blockpresencemanager"
 	decision "github.com/ipfs/go-bitswap/internal/decision"
@@ -29,6 +28,7 @@ import (
 	blocks "github.com/ipfs/go-block-format"
 	cid "github.com/ipfs/go-cid"
 	blockstore "github.com/ipfs/go-ipfs-blockstore"
+	delay "github.com/ipfs/go-ipfs-delay"
 	exchange "github.com/ipfs/go-ipfs-exchange-interface"
 	logging "github.com/ipfs/go-log"
 	metrics "github.com/ipfs/go-metrics-interface"
@@ -183,13 +183,13 @@ func New(parent context.Context, network bsnet.BitSwapNetwork,
 	sm = bssm.New(ctx, sessionFactory, sim, sessionPeerManagerFactory, bpm, pm, notif, network.Self())
 
 	bs := &Bitswap{
-		blockstore:       bstore,
-		network:          network,
-		process:          px,
-		newBlocks:        make(chan cid.Cid, HasBlockBufferSize),
-		provideKeys:      make(chan cid.Cid, provideKeysBufferSize),
-		pm:               pm,
-		pqm:              pqm,
+		blockstore:              bstore,
+		network:                 network,
+		process:                 px,
+		newBlocks:               make(chan cid.Cid, HasBlockBufferSize),
+		provideKeys:             make(chan cid.Cid, provideKeysBufferSize),
+		pm:                      pm,
+		pqm:                     pqm,
 		sm:                      sm,
 		sim:                     sim,
 		notif:                   notif,
@@ -368,11 +368,13 @@ func (bs *Bitswap) receiveBlocksFrom(ctx context.Context, from peer.ID, blks []b
 	}
 
 	// Put wanted blocks into blockstore
-	if len(wanted) > 0 {
-		err := bs.blockstore.PutMany(wanted)
-		if err != nil {
-			log.Errorf("Error writing %d blocks to datastore: %s", len(wanted), err)
-			return err
+	if _, err := crust.GetRootFromSealContext(ctx); err != nil {
+		if len(wanted) > 0 {
+			err := bs.blockstore.PutMany(wanted)
+			if err != nil {
+				log.Errorf("Error writing %d blocks to datastore: %s", len(wanted), err)
+				return err
+			}
 		}
 	}
 
