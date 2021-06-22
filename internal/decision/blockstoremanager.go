@@ -3,6 +3,7 @@ package decision
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 
 	blocks "github.com/ipfs/go-block-format"
@@ -96,7 +97,9 @@ func (bsm *blockstoreManager) getBlocks(ctx context.Context, ks []cid.Cid) (map[
 		if err != nil {
 			if err != bstore.ErrNotFound {
 				// Note: this isn't a fatal error. We shouldn't abort the request
-				log.Errorf("blockstore.Get(%s) error: %s", c, err)
+				if !strings.Contains(err.Error(), "Unseal") {
+					log.Errorf("blockstore.Get(%s) error: %s", c, err)
+				}
 			}
 		} else {
 			lk.Lock()
